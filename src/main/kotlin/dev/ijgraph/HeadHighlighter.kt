@@ -8,27 +8,28 @@ import com.intellij.vcs.log.VcsLogHighlighter.VcsCommitStyle
 import com.intellij.vcs.log.VcsLogUi
 import com.intellij.vcs.log.VcsShortCommitDetails
 import com.intellij.vcs.log.data.VcsLogData
-import com.intellij.vcs.log.ui.VcsLogUiEx
 import com.intellij.vcs.log.ui.highlighters.VcsLogHighlighterFactory
-import com.intellij.vcs.log.ui.table.VcsLogGraphTable
-import com.intellij.vcs.log.ui.table.column.Commit
+
+/**
+ * True while the Commit column renderer draws a cell (EDT only).
+ * Highlighters get a column index whose meaning depends on the caller, so the Commit column is detected this way instead.
+ */
+internal var renderingCommitColumn = false
 
 /** Bold subject for the checked-out commit, like Git Graph's `tr.commit.current`. */
 class HeadHighlighterFactory : VcsLogHighlighterFactory {
-    override fun createHighlighter(logData: VcsLogData, logUi: VcsLogUi): VcsLogHighlighter = HeadHighlighter(logUi)
+    override fun createHighlighter(logData: VcsLogData, logUi: VcsLogUi): VcsLogHighlighter = HeadHighlighter()
     override fun getId(): String = "ijgraph.head"
     override fun getTitle(): String = "HEAD Commit"
     override fun showMenuItem(): Boolean = false
 }
 
-private class HeadHighlighter(private val logUi: VcsLogUi) : VcsLogHighlighter {
+private class HeadHighlighter : VcsLogHighlighter {
     private var refs: VcsLogAggregatedStoredRefs? = null
 
-    override fun getStyle(commitId: Int, details: VcsShortCommitDetails, column: Int, isSelected: Boolean): VcsCommitStyle {
-        if (refs?.refsToCommit(commitId)?.any { it.name == HEAD } != true) return VcsCommitStyle.DEFAULT
-        val table = (logUi as? VcsLogUiEx)?.table as? VcsLogGraphTable
-        return if (table == null || table.getVcsLogColumn(column) == Commit) VcsCommitStyleFactory.bold() else VcsCommitStyle.DEFAULT
-    }
+    override fun getStyle(commitId: Int, details: VcsShortCommitDetails, column: Int, isSelected: Boolean): VcsCommitStyle =
+        if (renderingCommitColumn && refs?.refsToCommit(commitId)?.any { it.name == HEAD } == true) VcsCommitStyleFactory.bold()
+        else VcsCommitStyle.DEFAULT
 
     override fun update(dataPack: VcsLogDataPack, refreshHappened: Boolean) {
         refs = dataPack.refs

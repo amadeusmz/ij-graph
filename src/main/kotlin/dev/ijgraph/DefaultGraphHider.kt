@@ -85,7 +85,13 @@ private class NoGraphCommitRenderer(
     private val labels: LabelRecolorer?,
 ) : TableCellRenderer, VcsLogCellRenderer {
     override fun getTableCellRendererComponent(table: JTable, value: Any?, isSelected: Boolean, hasFocus: Boolean, row: Int, column: Int): Component {
-        val component = delegate.getTableCellRendererComponent(table, withoutGraph(value), isSelected, hasFocus, row, column)
+        renderingCommitColumn = true
+        val component = try {
+            delegate.getTableCellRendererComponent(table, withoutGraph(value), isSelected, hasFocus, row, column)
+        }
+        finally {
+            renderingCommitColumn = false
+        }
         // Labels are laid out by the delegate call above and painted later, so recolour them in between
         if (labels != null && value is GraphCommitCell.RealCommit && value.refsToThisCommit.isNotEmpty() && table is VcsLogGraphTable) {
             graphCellAt(table.model, row).color?.let(labels::recolor)
