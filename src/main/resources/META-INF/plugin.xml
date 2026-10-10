@@ -1,0 +1,18 @@
+<idea-plugin>
+    <id>dev.ijgraph</id>
+    <name>IJ Git Graph</name>
+    <vendor>ijgraph</vendor>
+    <description><![CDATA[
+    Renders the VCS Log graph in its own column, laid out like the VS Code Git Graph extension:
+    every branch keeps a straight lane and edges never cross over each other.
+    The built-in graph inside the Commit column is hidden while the Graph column is shown.
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.vcs</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <vcsLogCustomColumn implementation="dev.ijgraph.GitGraphColumn"/>
+        <logHighlighterFactory implementation="dev.ijgraph.HeadHighlighterFactory"/>
+    </extensions>
+</idea-plugin>
